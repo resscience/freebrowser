@@ -3,39 +3,62 @@ name: Build FreeBrowser for Windows
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:   # اجازه اجرای دستی از تب Actions
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    # 1. Checkout باید همیشه اولین مرحله باشد
     - name: Checkout code
-      uses: actions/checkout@v5   # ✅ به‌روزرسانی به v5 (سازگار با Node.js 24)
+      uses: actions/checkout@v5
 
-    # 2. Setup Go با غیرفعال کردن cache (چون پروژه go.sum ندارد)
     - name: Setup Go
-      uses: actions/setup-go@v6   # ✅ به‌روزرسانی به v6 (سازگار با Node.js 24)
+      uses: actions/setup-go@v6
       with:
         go-version: '1.20.4'
-        cache: false   # ⚠️ این خط بسیار مهم است: کش را غیرفعال می‌کند
+        cache: false
+
+    # --- مرحله تشخیصی: ساختار پروژه را چاپ کن ---
+    - name: Show project structure
+      shell: bash
+      run: |
+        echo "=== Root ==="
+        ls -la
+        echo "=== cmd folder ==="
+        ls -la cmd || true
+        echo "=== freebrowser/desktop folder ==="
+        ls -la freebrowser/desktop || true
+        echo "=== freebrowser/desktop/files folder ==="
+        ls -la freebrowser/desktop/files || true
 
     - name: Install goversioninfo
       run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
 
     - name: Build proxy (fbproxy)
+      shell: bash
       run: |
         cd cmd
         ./build-proxy.sh --os=windows
 
+    # --- مرحله تشخیصی: ببینیم fbproxy.exe کجا ساخته شده ---
+    - name: Find fbproxy output
+      shell: bash
+      run: |
+        echo "=== Searching for fbproxy* ==="
+        find . -name "fbproxy*" -type f || true
+
     - name: Copy proxy executable
-      run: copy cmd\fbproxy.exe freebrowser\desktop\files\
+      shell: bash
+      run: |
+        # اگر فایل در cmd است، کپی کن
+        cp cmd/fbproxy.exe freebrowser/desktop/files/ 2>/dev/null || \
+        cp cmd/fbproxy-windows.exe freebrowser/desktop/files/fbproxy.exe
 
     - name: Build browser executable
+      shell: bash
       run: |
-        cd freebrowser\desktop
+        cd freebrowser/desktop
         ./build-browser.sh --os=windows
 
     - name: Upload artifact
