@@ -11,13 +11,16 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    # 1. Checkout باید همیشه اولین مرحله باشد
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5   # ✅ به‌روزرسانی به v5 (سازگار با Node.js 24)
 
+    # 2. Setup Go با غیرفعال کردن cache (چون پروژه go.sum ندارد)
     - name: Setup Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6   # ✅ به‌روزرسانی به v6 (سازگار با Node.js 24)
       with:
-        go-version: '1.20.4'   # نسخه‌ای که پروژه نیاز دارد
+        go-version: '1.20.4'
+        cache: false   # ⚠️ این خط بسیار مهم است: کش را غیرفعال می‌کند
 
     - name: Install goversioninfo
       run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
