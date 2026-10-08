@@ -40,15 +40,16 @@ jobs:
         chmod +x "$HOME/bin/zip"
         echo "$HOME/bin" >> "$GITHUB_PATH"
 
-    - name: Initialize Go module
-      shell: bash
-      run: |
-        go mod init freebrowser || true
-        go mod edit -go=1.26
-        go mod tidy
-
     - name: Install goversioninfo
       run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+
+    # ---------- ماژول اول: fb-proxy (برای cmd) ----------
+    - name: Init root module (fb-proxy)
+      shell: bash
+      run: |
+        go mod init fb-proxy || true
+        go mod edit -go=1.26
+        go mod tidy
 
     - name: Build proxy (fbproxy)
       shell: bash
@@ -69,6 +70,15 @@ jobs:
           find . -name "fbproxy*.exe" -exec cp {} freebrowser/desktop/files/fbproxy.exe \;
         fi
         ls -la freebrowser/desktop/files/
+
+    # ---------- ماژول دوم: freebrowser (برای desktop) ----------
+    - name: Init desktop module (freebrowser)
+      shell: bash
+      run: |
+        cd freebrowser/desktop
+        go mod init freebrowser || true
+        go mod edit -go=1.26
+        go mod tidy
 
     - name: Build browser executable
       shell: bash
