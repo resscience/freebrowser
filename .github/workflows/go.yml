@@ -39,13 +39,11 @@ jobs:
         SCRIPT
         chmod +x "$HOME/bin/zip"
         echo "$HOME/bin" >> "$GITHUB_PATH"
-        echo "zip shim created at $HOME/bin/zip"
-        "$HOME/bin/zip" 2>&1 | head -1 || true
 
     - name: Initialize Go module
       shell: bash
       run: |
-        go mod init fb-proxy || true
+        go mod init freebrowser || true
         go mod edit -go=1.26
         go mod tidy
 
