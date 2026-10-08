@@ -19,6 +19,29 @@ jobs:
         go-version: '1.26'
         cache: false
 
+    - name: Create zip shim
+      shell: bash
+      run: |
+        mkdir -p "$HOME/bin"
+        cat > "$HOME/bin/zip" << 'SCRIPT'
+        #!/bin/bash
+        OUTPUT=""
+        ITEMS=()
+        while [[ $# -gt 0 ]]; do
+          case "$1" in
+            -*) shift ;;
+            *)
+              if [ -z "$OUTPUT" ]; then OUTPUT="$1"; else ITEMS+=("$1"); fi
+              shift ;;
+          esac
+        done
+        7z a -tzip "$OUTPUT" "${ITEMS[@]}"
+        SCRIPT
+        chmod +x "$HOME/bin/zip"
+        echo "$HOME/bin" >> "$GITHUB_PATH"
+        echo "zip shim created at $HOME/bin/zip"
+        "$HOME/bin/zip" 2>&1 | head -1 || true
+
     - name: Initialize Go module
       shell: bash
       run: |
