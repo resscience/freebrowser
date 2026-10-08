@@ -16,13 +16,14 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@v6
       with:
-        go-version: '1.20.4'
+        go-version: '1.24'
         cache: false
 
     - name: Initialize Go module
       shell: bash
       run: |
-        go mod init fb-proxy
+        go mod init fb-proxy || true
+        go mod edit -go=1.24
         go mod tidy
 
     - name: Install goversioninfo
@@ -32,19 +33,28 @@ jobs:
       shell: bash
       run: |
         cd cmd
-        ./build-proxy.sh --os=windows
+        bash build-proxy.sh --os=windows
+        ls -la
 
     - name: Copy proxy executable
       shell: bash
       run: |
-        cp cmd/fbproxy.exe freebrowser/desktop/files/ 2>/dev/null || \
-        cp cmd/fbproxy-windows.exe freebrowser/desktop/files/fbproxy.exe
+        if [ -f cmd/fbproxy.exe ]; then
+          cp cmd/fbproxy.exe freebrowser/desktop/files/fbproxy.exe
+        elif [ -f cmd/fbproxy-windows.exe ]; then
+          cp cmd/fbproxy-windows.exe freebrowser/desktop/files/fbproxy.exe
+        else
+          echo "fbproxy.exe not found, searching..."
+          find . -name "fbproxy*.exe" -exec cp {} freebrowser/desktop/files/fbproxy.exe \;
+        fi
+        ls -la freebrowser/desktop/files/
 
     - name: Build browser executable
       shell: bash
       run: |
         cd freebrowser/desktop
-        ./build-browser.sh --os=windows
+        bash build-browser.sh --os=windows
+        ls -la
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
