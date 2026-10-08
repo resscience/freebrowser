@@ -1,0 +1,42 @@
+name: Build FreeBrowser for Windows
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.20.4'   # نسخه‌ای که پروژه نیاز دارد
+
+    - name: Install goversioninfo
+      run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+
+    - name: Build proxy (fbproxy)
+      run: |
+        cd cmd
+        ./build-proxy.sh --os=windows
+
+    - name: Copy proxy executable
+      run: copy cmd\fbproxy.exe freebrowser\desktop\files\
+
+    - name: Build browser executable
+      run: |
+        cd freebrowser\desktop
+        ./build-browser.sh --os=windows
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: freebrowser-windows
+        path: freebrowser/desktop/freebrowser.exe
