@@ -3,7 +3,7 @@ name: Build FreeBrowser for Windows
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:   # اجازه اجرای دستی از تب Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,18 +19,11 @@ jobs:
         go-version: '1.20.4'
         cache: false
 
-    # --- مرحله تشخیصی: ساختار پروژه را چاپ کن ---
-    - name: Show project structure
+    - name: Initialize Go module
       shell: bash
       run: |
-        echo "=== Root ==="
-        ls -la
-        echo "=== cmd folder ==="
-        ls -la cmd || true
-        echo "=== freebrowser/desktop folder ==="
-        ls -la freebrowser/desktop || true
-        echo "=== freebrowser/desktop/files folder ==="
-        ls -la freebrowser/desktop/files || true
+        go mod init fb-proxy
+        go mod tidy
 
     - name: Install goversioninfo
       run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
@@ -41,17 +34,9 @@ jobs:
         cd cmd
         ./build-proxy.sh --os=windows
 
-    # --- مرحله تشخیصی: ببینیم fbproxy.exe کجا ساخته شده ---
-    - name: Find fbproxy output
-      shell: bash
-      run: |
-        echo "=== Searching for fbproxy* ==="
-        find . -name "fbproxy*" -type f || true
-
     - name: Copy proxy executable
       shell: bash
       run: |
-        # اگر فایل در cmd است، کپی کن
         cp cmd/fbproxy.exe freebrowser/desktop/files/ 2>/dev/null || \
         cp cmd/fbproxy-windows.exe freebrowser/desktop/files/fbproxy.exe
 
